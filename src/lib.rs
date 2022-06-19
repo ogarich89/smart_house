@@ -8,14 +8,14 @@ use crate::devices::{DeviceInfoProvider, Devices};
 use crate::room::{Room, Rooms};
 
 pub struct SmartHouse {
-    name: &'static str,
+    pub name: &'static str,
     rooms: HashMap<Rooms, Room>,
 }
 
 impl DeviceInfoProvider for SmartHouse {
     fn get_device_status(&self, room: &Rooms, name: &'static str) -> String {
         if !self.rooms[room].devices.contains_key(name) {
-            String::from("not found")
+            name.to_string() + " not found"
         } else {
             match &self.rooms[room].devices[name] {
                 Devices::SmartLamp(lamp) => {
@@ -75,7 +75,7 @@ mod tests {
 
     use crate::devices::{Devices, SmartSocket, SmartSpeaker};
     use crate::room::{Room, Rooms};
-    use crate::SmartHouse;
+    use crate::{DeviceInfoProvider, SmartHouse};
 
     fn get_house() -> SmartHouse {
         let kitchen = Room {
@@ -84,39 +84,26 @@ mod tests {
                 ("Speaker", Devices::SmartSpeaker(SmartSpeaker { volume: 3 })),
             ]),
         };
-        return SmartHouse::new(
+        SmartHouse::new(
             "Test smart house",
             HashMap::from([(Rooms::Kitchen, kitchen)]),
-        );
+        )
     }
 
     #[test]
-    fn it_should_return_name() {
-        let house = get_house();
-        assert_eq!(house.name, "Test smart house");
-    }
-
-    #[test]
-    fn it_should_return_rooms_list() {
+    fn it_should_return_device_status() {
         let house = get_house();
         assert_eq!(
-            format!("{:?}", house.get_rooms()),
-            format!("{:?}", [Rooms::Kitchen])
+            house.get_device_status(&Rooms::Kitchen, "Socket"),
+            "voltage 110"
         );
     }
-
     #[test]
-    fn it_should_return_devices_list() {
+    fn it_should_return_message_device_not_found() {
         let house = get_house();
-        assert!(format!("{:?}", house.get_devices(&Rooms::Kitchen)).contains("Speaker"));
-        assert!(format!("{:?}", house.get_devices(&Rooms::Kitchen)).contains("Socket"));
-    }
-
-    #[test]
-    fn it_should_return_report() {
-        let house = get_house();
-        assert!(house
-            .create_report()
-            .contains("Test smart house report: \n\r"));
+        assert_eq!(
+            house.get_device_status(&Rooms::Kitchen, "Lamp"),
+            "Lamp not found"
+        );
     }
 }
