@@ -16,25 +16,23 @@ impl DeviceInfoProvider for SmartHouse {
     fn get_device_status(&self, room: &Rooms, name: &'static str) -> String {
         let result = self.get_device(room, name);
         match result {
-            Ok(device) => {
-                match device {
-                    Devices::SmartLamp(lamp) => {
-                        if lamp.is_enabled {
-                            String::from("enabled")
-                        } else {
-                            String::from("disabled")
-                        }
-                    }
-                    Devices::SmartSocket(socket) => "voltage ".to_owned() + &socket.voltage.to_string(),
-                    Devices::SmartSpeaker(speaker) => {
-                        "volume ".to_owned() + &speaker.volume.to_string()
-                    }
-                    Devices::SmartThermometer(thermometer) => {
-                        "temperature ".to_owned() + &thermometer.temperature.to_string()
+            Ok(device) => match device {
+                Devices::SmartLamp(lamp) => {
+                    if lamp.is_enabled {
+                        String::from("enabled")
+                    } else {
+                        String::from("disabled")
                     }
                 }
-            }
-            Err(error) => error
+                Devices::SmartSocket(socket) => "voltage ".to_owned() + &socket.voltage.to_string(),
+                Devices::SmartSpeaker(speaker) => {
+                    "volume ".to_owned() + &speaker.volume.to_string()
+                }
+                Devices::SmartThermometer(thermometer) => {
+                    "temperature ".to_owned() + &thermometer.temperature.to_string()
+                }
+            },
+            Err(error) => error,
         }
     }
 }
@@ -66,7 +64,7 @@ impl SmartHouse {
                     Ok(&room.devices[name])
                 }
             }
-            None => Err(format!("The room '{:?}' is not exists!", room))
+            None => Err(format!("The room '{:?}' is not exists!", room)),
         }
     }
 
