@@ -14,10 +14,9 @@ pub struct SmartHouse {
 
 impl DeviceInfoProvider for SmartHouse {
     fn get_device_status(&self, room: &Rooms, name: &'static str) -> String {
-        if !self.rooms[room].devices.contains_key(name) {
-            name.to_string() + " not found"
-        } else {
-            match &self.rooms[room].devices[name] {
+        let result = self.get_device(room, name);
+        match result {
+            Ok(device) => match device {
                 Devices::SmartLamp(lamp) => {
                     if lamp.is_enabled {
                         String::from("enabled")
@@ -32,7 +31,8 @@ impl DeviceInfoProvider for SmartHouse {
                 Devices::SmartThermometer(thermometer) => {
                     "temperature ".to_owned() + &thermometer.temperature.to_string()
                 }
-            }
+            },
+            Err(error) => error,
         }
     }
 }
@@ -42,8 +42,30 @@ impl SmartHouse {
         SmartHouse { name, rooms }
     }
 
+    fn get_room(&self, room: &Rooms) -> Option<&Room> {
+        if self.rooms.contains_key(room) {
+            Some(&self.rooms[room])
+        } else {
+            None
+        }
+    }
+
     pub fn get_rooms(&self) -> Keys<Rooms, Room> {
         self.rooms.keys()
+    }
+
+    fn get_device(&self, room: &Rooms, name: &'static str) -> Result<&Devices, String> {
+        let result = self.get_room(room);
+        match result {
+            Some(room) => {
+                if !room.devices.contains_key(name) {
+                    Err(format!("Device '{}' not found!", name))
+                } else {
+                    Ok(&room.devices[name])
+                }
+            }
+            None => Err(format!("The room '{:?}' is not exists!", room)),
+        }
     }
 
     pub fn get_devices(&self, room: &Rooms) -> Keys<&'static str, Devices> {
@@ -103,7 +125,7 @@ mod tests {
         let house = get_house();
         assert_eq!(
             house.get_device_status(&Rooms::Kitchen, "Lamp"),
-            "Lamp not found"
+            "Device 'Lamp' not found!"
         );
     }
 }
