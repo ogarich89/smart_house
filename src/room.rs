@@ -1,13 +1,6 @@
 use crate::devices::Devices;
-use std::collections::HashMap;
-
-#[derive(Debug, Eq, PartialEq, Hash)]
-pub enum Rooms {
-    Hall,
-    Kitchen,
-    Bedroom,
-}
+use std::collections::BTreeMap;
 
 pub struct Room {
-    pub devices: HashMap<&'static str, Devices>,
+    pub devices: BTreeMap<&'static str, Devices>,
 }
