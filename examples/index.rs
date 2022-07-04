@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use smart_house::devices::{Devices, SmartLamp, SmartSocket, SmartSpeaker, SmartThermometer};
-use smart_house::room::{Room, Rooms};
+use smart_house::room::Room;
 use smart_house::SmartHouse;
 
 fn main() {
     let kitchen = Room {
-        devices: HashMap::from([
+        devices: BTreeMap::from([
             ("Socket", Devices::SmartSocket(SmartSocket { voltage: 110 })),
             (
                 "Thermometer",
@@ -17,25 +17,47 @@ fn main() {
     };
 
     let hall = Room {
-        devices: HashMap::from([
+        devices: BTreeMap::from([
             ("Socket", Devices::SmartSocket(SmartSocket { voltage: 220 })),
             ("Lamp", Devices::SmartLamp(SmartLamp { is_enabled: true })),
         ]),
     };
 
     let bedroom = Room {
-        devices: HashMap::from([("Socket", Devices::SmartSocket(SmartSocket { voltage: 110 }))]),
+        devices: BTreeMap::from([("Socket", Devices::SmartSocket(SmartSocket { voltage: 110 }))]),
     };
 
-    let house = SmartHouse::new(
+    let mut house = SmartHouse::new(
         "Smart house",
-        HashMap::from([
-            (Rooms::Bedroom, bedroom),
-            (Rooms::Kitchen, kitchen),
-            (Rooms::Hall, hall),
-        ]),
+        BTreeMap::from([("Bedroom", bedroom), ("Kitchen", kitchen), ("Hall", hall)]),
     );
 
+    house.add_room(
+        "Living room",
+        Room {
+            devices: BTreeMap::from([(
+                "Socket",
+                Devices::SmartSocket(SmartSocket { voltage: 220 }),
+            )]),
+        },
+    );
+
+    house.remove_room("Kitchen");
+
+    house.add_device(
+        "Living room",
+        "Smart Speaker",
+        Devices::SmartSpeaker(SmartSpeaker { volume: 7 }),
+    );
+
+    house.remove_device("Hall", "Lamp");
+
     let report = house.create_report();
-    println!("{}", report)
+    println!("{}", report);
+
+    let rooms_list = house.get_rooms_list();
+    println!("{:?}", rooms_list);
+
+    let devices_list = house.get_devices_list("Living room");
+    println!("{:?}", devices_list);
 }

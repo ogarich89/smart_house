@@ -1,5 +1,3 @@
-use crate::room::Rooms;
-
 pub enum Devices {
     SmartSocket(SmartSocket),
     SmartThermometer(SmartThermometer),
@@ -8,7 +6,7 @@ pub enum Devices {
 }
 
 pub trait DeviceInfoProvider {
-    fn get_device_status(&self, room: &Rooms, name: &'static str) -> String;
+    fn get_device_status(&self, room: &'static str, name: &'static str) -> String;
 }
 
 pub struct SmartSocket {
