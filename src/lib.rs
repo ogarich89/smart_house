@@ -6,10 +6,19 @@ pub mod room;
 
 use crate::devices::{DeviceInfoProvider, Devices};
 use crate::room::{Room, Rooms};
+use thiserror::Error;
 
 pub struct SmartHouse {
     pub name: &'static str,
     rooms: HashMap<Rooms, Room>,
+}
+
+#[derive(Error, Debug)]
+pub enum SmartHouseError {
+    #[error("Device `{0}` not found!")]
+    DeviceNotFound(&'static str),
+    #[error("The room `{0}` is not exists!")]
+    RoomNotExists(String),
 }
 
 impl DeviceInfoProvider for SmartHouse {
@@ -32,7 +41,10 @@ impl DeviceInfoProvider for SmartHouse {
                     "temperature ".to_owned() + &thermometer.temperature.to_string()
                 }
             },
-            Err(error) => error,
+            Err(error) => match error {
+                SmartHouseError::DeviceNotFound(name) => name.to_string(),
+                SmartHouseError::RoomNotExists(room) => room,
+            },
         }
     }
 }
@@ -54,17 +66,17 @@ impl SmartHouse {
         self.rooms.keys()
     }
 
-    fn get_device(&self, room: &Rooms, name: &'static str) -> Result<&Devices, String> {
+    fn get_device(&self, room: &Rooms, name: &'static str) -> Result<&Devices, SmartHouseError> {
         let result = self.get_room(room);
         match result {
             Some(room) => {
                 if !room.devices.contains_key(name) {
-                    Err(format!("Device '{}' not found!", name))
+                    Err(SmartHouseError::DeviceNotFound(name))
                 } else {
                     Ok(&room.devices[name])
                 }
             }
-            None => Err(format!("The room '{:?}' is not exists!", room)),
+            None => Err(SmartHouseError::RoomNotExists(format!("{:?}", room))),
         }
     }
 
@@ -123,9 +135,6 @@ mod tests {
     #[test]
     fn it_should_return_message_device_not_found() {
         let house = get_house();
-        assert_eq!(
-            house.get_device_status(&Rooms::Kitchen, "Lamp"),
-            "Device 'Lamp' not found!"
-        );
+        assert_eq!(house.get_device_status(&Rooms::Kitchen, "Lamp"), "Lamp");
     }
 }
