@@ -1,0 +1,10 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+client = { path = "../client" }
+actix-web = "4"
+mongodb = "2"
+serde = { version = "1", features = ["derive"] }
